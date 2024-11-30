@@ -1,0 +1,95 @@
+workflows:
+  casual_shopper:
+    vus: 100
+    setup_queries:
+      - fetch_member
+      - fetch_product_names
+    queries:
+      - name: browse_product
+        rate: 2/1s
+      - name: create_purchase
+        rate: 1/30s
+      - name: check_order
+        rate: 1/10s
+
+  bot_shopper:
+    vus: 10
+    setup_queries:
+      - fetch_member
+      - fetch_product_names
+    queries:
+      - name: browse_product
+        rate: 10/1s
+      - name: create_purchase
+        rate: 1/10s
+      - name: check_order
+        rate: 1/10s
+
+activities:
+  fetch_member:
+    type: query
+    query: |-
+      SELECT id
+      FROM member
+      ORDER BY random()
+      LIMIT 1;
+
+  fetch_product_names:
+    type: query
+    args:
+      - type: int
+        min: 10
+        max: 10
+    query: |-
+      SELECT name
+      FROM product
+      ORDER BY random()
+      LIMIT $1;
+
+  browse_product:
+    args:
+      - type: ref
+        query: fetch_product_names
+        column: name
+    type: query
+    query: |-
+      SELECT id FROM product
+      WHERE name = $1;
+
+  create_purchase:
+    args:
+      - type: ref
+        query: fetch_member
+        column: id
+      - type: ref
+        query: browse_product
+        column: id
+      - type: int
+        min: 1
+        max: 5
+    type: query
+    query: |-
+      WITH new_purchase AS (
+        INSERT INTO purchase (member_id, amount, status, ts)
+        VALUES ($1, (SELECT price FROM product WHERE id = $2) * $3, 'pending', now())
+        RETURNING id
+      )
+      INSERT INTO purchase_line (purchase_id, product_id, quantity)
+      SELECT id, $2, $3
+      FROM new_purchase
+      RETURNING purchase_id;
+
+  check_order:
+    args:
+      - type: ref
+        query: create_purchase
+        column: purchase_id
+      - type: ref
+        query: fetch_member
+        column: id
+    type: query
+    query: |-
+      SELECT status
+      FROM purchase
+      WHERE id = $1
+      AND member_id = $2;
