@@ -1,5 +1,6 @@
 # CockroachDB-Online-Schema-Change
-CockroachDB Online Schema Change Demo
+This is a copy of the [drk repo](https://github.com/codingconcepts/drk?tab=readme-ov-file) with slight changes to the ecommerce_example so it works with my existing data model. The application provides read and write loads so I can demo CockroachDB's ability to do online schema changes while queries are being executed.
+
 
 # drk
 [wrk](https://github.com/wg/wrk) but for databases and pronounced [/dɜːk/](https://dictionary.cambridge.org/pronunciation/english/dirk).
