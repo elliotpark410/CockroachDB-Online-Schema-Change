@@ -71,7 +71,7 @@ activities:
     query: |-
       WITH new_purchase AS (
         INSERT INTO purchase (member_id, amount, status, ts)
-        VALUES ($1, (SELECT price FROM product WHERE id = $2) * $3, 'pending', now())
+        VALUES ($1, (SELECT price FROM product WHERE id = $2) * CAST($3 AS DECIMAL), 'pending', now())
         RETURNING id
       )
       INSERT INTO purchase_line (purchase_id, product_id, quantity)
