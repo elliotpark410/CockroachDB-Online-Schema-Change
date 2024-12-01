@@ -64,9 +64,9 @@ activities:
       - type: ref
         query: browse_product
         column: id
-      - type: decimal
-        min: 1
-        max: 5
+      - type: float
+        min: 1.0
+        max: 5.0
     type: query
     query: |-
       WITH new_purchase AS (
@@ -75,7 +75,7 @@ activities:
         RETURNING id
       )
       INSERT INTO purchase_line (purchase_id, product_id, quantity)
-      SELECT id, $2, $3
+       SELECT id, $2, CAST($3 AS INT8)
       FROM new_purchase
       RETURNING purchase_id;
 
